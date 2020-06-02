@@ -1,0 +1,44 @@
+- hosts: all
+  tasks:
+    - name: Ensure group "fivetran" exists
+      group:
+        name: fivetran
+        state: present
+      become: true
+
+    - name: Add fivetran user
+      user:
+        name: fivetran
+        groups: fivetran
+        append: yes
+      become: true
+
+    - name: Create a directory if it does not exist
+      file:
+        path: /home/fivetran/.ssh
+        state: directory
+        mode: '700'
+        owner: fivetran
+        group: fivetran
+      become: true
+
+    - name: Copy authorized keys
+      copy:
+        src: authorized_keys
+        dest: /home/fivetran/.ssh/authorized_keys
+        owner: fivetran
+        group: fivetran
+        mode: '0600'
+      become: true
+
+    - name: Copy ssh config
+      copy:
+        src: sshd_config
+        dest: /etc/ssh/sshd_config
+        owner: root
+        group: root
+      become: true
+
+    - name: restart sshd
+      command: systemctl restart sshd
+      become: true
